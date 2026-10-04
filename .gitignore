@@ -1,0 +1,29 @@
+# macOS, editor and local settings
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+.env
+.env.*
+!.env.example
+
+# Runtime files: uploads, exports and user-created templates
+/storage/backgrounds/*
+!/storage/backgrounds/.gitkeep
+/storage/exports/*
+!/storage/exports/.gitkeep
+/storage/templates/*
+!/storage/templates/standard-magenta.json
+/storage/**/.lock
+/storage/**/.tmp-*
+
+# Reference photo is for local design work and is not needed at runtime
+/reference/*.png
+
+# Optional browser test output
+__pycache__/
+*.py[cod]
+/playwright-report/
+/test-results/

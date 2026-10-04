@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "^(README.*|THIRD_PARTY\.md|compose\.yaml|CODEX_MASTER_PROMPT\.md|README_HANDOFF\.md)$">
+  Require all denied
+</FilesMatch>

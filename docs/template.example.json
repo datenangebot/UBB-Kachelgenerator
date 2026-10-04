@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "id": "standard-magenta",
+  "name": "Standard Magenta",
+  "description": "Starttemplate angelehnt an die vorhandene UBB-Werbekachel.",
+  "width": 1138,
+  "height": 1138,
+  "fields": [
+    {
+      "id": "headline",
+      "label": "Überschrift",
+      "inputType": "textarea",
+      "defaultValue": "150 Jahre Neuwittenbek",
+      "order": 10
+    },
+    {
+      "id": "date",
+      "label": "Datum",
+      "inputType": "text",
+      "defaultValue": "Sa 29.08.",
+      "order": 20
+    },
+    {
+      "id": "time",
+      "label": "Uhrzeit",
+      "inputType": "text",
+      "defaultValue": "18:00h",
+      "order": 30
+    },
+    {
+      "id": "mainText",
+      "label": "Haupttext",
+      "inputType": "text",
+      "defaultValue": "Uni-BigBand Kiel",
+      "order": 40
+    },
+    {
+      "id": "sideText",
+      "label": "Seitentext",
+      "inputType": "text",
+      "defaultValue": "Summer · Swing · Pop",
+      "order": 50
+    }
+  ],
+  "elements": [
+    {
+      "id": "photo",
+      "name": "Hintergrundfoto",
+      "type": "photo",
+      "x": 380,
+      "y": 0,
+      "width": 758,
+      "height": 1138,
+      "rotation": 0,
+      "opacity": 1,
+      "zIndex": 10,
+      "crop": { "positionX": 50, "positionY": 50, "zoom": 1 }
+    },
+    {
+      "id": "magenta-panel",
+      "name": "Magenta Fläche",
+      "type": "shape",
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 1138,
+      "rotation": 0,
+      "opacity": 1,
+      "zIndex": 20,
+      "fillColor": "#c0007f",
+      "borderRadius": 0
+    },
+    {
+      "id": "headline",
+      "name": "Überschrift",
+      "type": "text",
+      "binding": { "type": "field", "fieldId": "headline" },
+      "x": 70,
+      "y": 90,
+      "width": 770,
+      "height": 180,
+      "rotation": 0,
+      "opacity": 1,
+      "zIndex": 30,
+      "fontFamily": "Arial, sans-serif",
+      "fontWeight": 700,
+      "minFontSize": 48,
+      "maxFontSize": 82,
+      "lineHeight": 1.05,
+      "maxLines": 2,
+      "wrap": true,
+      "color": "#ffffff",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "letterSpacing": 0
+    },
+    {
+      "id": "sideText",
+      "name": "Seitentext",
+      "type": "text",
+      "binding": { "type": "field", "fieldId": "sideText" },
+      "x": 18,
+      "y": 820,
+      "width": 360,
+      "height": 60,
+      "rotation": -90,
+      "opacity": 1,
+      "zIndex": 40,
+      "fontFamily": "Arial, sans-serif",
+      "fontWeight": 700,
+      "minFontSize": 24,
+      "maxFontSize": 40,
+      "lineHeight": 1,
+      "maxLines": 1,
+      "wrap": false,
+      "color": "#ffffff",
+      "textAlign": "left",
+      "verticalAlign": "middle",
+      "letterSpacing": 0
+    }
+  ]
+}

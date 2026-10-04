@@ -1,0 +1,8 @@
+services:
+  web:
+    image: php:8.3-apache
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    command: sh -c "printf 'upload_max_filesize=80M\\npost_max_size=90M\\n' > /usr/local/etc/php/conf.d/ubb.ini && apache2-foreground"

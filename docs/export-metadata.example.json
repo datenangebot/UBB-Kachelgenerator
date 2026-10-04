@@ -1,0 +1,27 @@
+{
+  "id": "20261004-095742-a1b2c3",
+  "createdAt": "2026-10-04T09:57:42+02:00",
+  "filename": "UBB_Neuwittenbek_2026.png",
+  "format": "png",
+  "width": 1138,
+  "height": 1138,
+  "scale": 1,
+  "templateId": "standard-magenta",
+  "templateName": "Standard Magenta",
+  "generatorState": {
+    "fields": {
+      "headline": "150 Jahre Neuwittenbek",
+      "date": "Sa 29.08.",
+      "time": "18:00h",
+      "mainText": "Uni-BigBand Kiel",
+      "sideText": "Summer · Swing · Pop"
+    },
+    "background": "beispiel.jpg",
+    "photo": {
+      "positionX": 50,
+      "positionY": 50,
+      "zoom": 1.1
+    },
+    "textOverrides": {}
+  }
+}

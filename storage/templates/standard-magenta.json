@@ -1,0 +1,241 @@
+{
+    "schemaVersion": 1,
+    "id": "standard-magenta",
+    "name": "Standard Magenta",
+    "description": "Angelehnt an die UBB-Referenzkachel",
+    "width": 1138,
+    "height": 1138,
+    "fields": [
+        {
+            "id": "headline",
+            "label": "Überschrift",
+            "inputType": "textarea",
+            "defaultValue": "150 Jahre Neuwittenbek",
+            "order": 10
+        },
+        {
+            "id": "date",
+            "label": "Datum",
+            "inputType": "text",
+            "defaultValue": "Sa 29.08.",
+            "order": 20
+        },
+        {
+            "id": "time",
+            "label": "Uhrzeit",
+            "inputType": "text",
+            "defaultValue": "18:00h",
+            "order": 30
+        },
+        {
+            "id": "maintext",
+            "label": "Haupttext",
+            "inputType": "text",
+            "defaultValue": "Uni-BigBand Kiel",
+            "order": 40
+        },
+        {
+            "id": "sidetext",
+            "label": "Seitentext",
+            "inputType": "text",
+            "defaultValue": "Summer · Swing · Pop",
+            "order": 50
+        }
+    ],
+    "elements": [
+        {
+            "id": "base",
+            "name": "Magenta Hintergrund",
+            "type": "shape",
+            "x": -102,
+            "y": -365,
+            "width": 1247,
+            "height": 1133,
+            "rotation": -7,
+            "opacity": 1,
+            "zIndex": 2,
+            "fillColor": "#9f147e",
+            "borderRadius": 0
+        },
+        {
+            "id": "photo",
+            "name": "Konzertfoto",
+            "type": "photo",
+            "x": 2,
+            "y": 693,
+            "width": 1140,
+            "height": 444,
+            "rotation": 0,
+            "opacity": 1,
+            "zIndex": 1,
+            "crop": {
+                "positionX": 50,
+                "positionY": 50,
+                "zoom": 1
+            }
+        },
+        {
+            "id": "headline",
+            "name": "Überschrift",
+            "type": "text",
+            "binding": {
+                "type": "field",
+                "fieldId": "headline"
+            },
+            "x": 125,
+            "y": 78,
+            "width": 990,
+            "height": 95,
+            "rotation": 0,
+            "opacity": 1,
+            "zIndex": 3,
+            "fontFamily": "Arial, sans-serif",
+            "fontWeight": 700,
+            "minFontSize": 45,
+            "maxFontSize": 80,
+            "lineHeight": 1,
+            "maxLines": 2,
+            "wrap": true,
+            "color": "#ffffff",
+            "textAlign": "left",
+            "verticalAlign": "middle",
+            "letterSpacing": 0
+        },
+        {
+            "id": "date",
+            "name": "Datum",
+            "type": "text",
+            "binding": {
+                "type": "field",
+                "fieldId": "date"
+            },
+            "x": 220,
+            "y": 184,
+            "width": 460,
+            "height": 94,
+            "rotation": 0,
+            "opacity": 1,
+            "zIndex": 4,
+            "fontFamily": "Arial, sans-serif",
+            "fontWeight": 400,
+            "minFontSize": 44,
+            "maxFontSize": 82,
+            "lineHeight": 1,
+            "maxLines": 1,
+            "wrap": false,
+            "color": "#ffffff",
+            "textAlign": "left",
+            "verticalAlign": "middle",
+            "letterSpacing": 0
+        },
+        {
+            "id": "time",
+            "name": "Uhrzeit",
+            "type": "text",
+            "binding": {
+                "type": "field",
+                "fieldId": "time"
+            },
+            "x": 680,
+            "y": 184,
+            "width": 350,
+            "height": 94,
+            "rotation": 0,
+            "opacity": 1,
+            "zIndex": 5,
+            "fontFamily": "Arial, sans-serif",
+            "fontWeight": 400,
+            "minFontSize": 44,
+            "maxFontSize": 82,
+            "lineHeight": 1,
+            "maxLines": 1,
+            "wrap": false,
+            "color": "#ffffff",
+            "textAlign": "left",
+            "verticalAlign": "middle",
+            "letterSpacing": 0
+        },
+        {
+            "id": "main",
+            "name": "Bandname",
+            "type": "text",
+            "binding": {
+                "type": "field",
+                "fieldId": "maintext"
+            },
+            "x": 200,
+            "y": 298,
+            "width": 820,
+            "height": 100,
+            "rotation": 0,
+            "opacity": 1,
+            "zIndex": 6,
+            "fontFamily": "Arial, sans-serif",
+            "fontWeight": 700,
+            "minFontSize": 45,
+            "maxFontSize": 82,
+            "lineHeight": 1,
+            "maxLines": 2,
+            "wrap": true,
+            "color": "#ffffff",
+            "textAlign": "left",
+            "verticalAlign": "middle",
+            "letterSpacing": 0
+        },
+        {
+            "id": "side",
+            "name": "Seitentext",
+            "type": "text",
+            "binding": {
+                "type": "field",
+                "fieldId": "sidetext"
+            },
+            "x": -295,
+            "y": 520,
+            "width": 700,
+            "height": 63,
+            "rotation": -90,
+            "opacity": 1,
+            "zIndex": 7,
+            "fontFamily": "Arial, sans-serif",
+            "fontWeight": 700,
+            "minFontSize": 25,
+            "maxFontSize": 47,
+            "lineHeight": 1,
+            "maxLines": 1,
+            "wrap": false,
+            "color": "#ffffff",
+            "textAlign": "center",
+            "verticalAlign": "middle",
+            "letterSpacing": 0
+        },
+        {
+            "id": "logo-placeholder",
+            "name": "Logo Platzhalter",
+            "type": "text",
+            "binding": {
+                "type": "static",
+                "text": "UBB"
+            },
+            "x": 214,
+            "y": 455,
+            "width": 755,
+            "height": 305,
+            "rotation": 0,
+            "opacity": 1,
+            "zIndex": 8,
+            "fontFamily": "Arial, sans-serif",
+            "fontWeight": 700,
+            "minFontSize": 130,
+            "maxFontSize": 285,
+            "lineHeight": 1,
+            "maxLines": 1,
+            "wrap": false,
+            "color": "#ffffff",
+            "textAlign": "center",
+            "verticalAlign": "middle",
+            "letterSpacing": 18
+        }
+    ],
+    "updatedAt": "2026-10-04T08:32:11+00:00"
+}
