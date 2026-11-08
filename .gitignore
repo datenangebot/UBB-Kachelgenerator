@@ -19,6 +19,10 @@ Thumbs.db
 /storage/**/.lock
 /storage/**/.tmp-*
 
+# Uploaded template assets belong to the deployment's persistent data.
+/assets/template-assets/*
+!/assets/template-assets/.gitkeep
+
 # Reference photo is for local design work and is not needed at runtime
 /reference/*.png
 

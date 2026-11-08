@@ -59,6 +59,7 @@ Eigenschaften:
 - zIndex
 - crop defaults: `positionX`, `positionY`, `zoom`
 - `objectFit` in v1 fest `cover`
+- optional `asset`: Standardfoto unter `assets/template-assets/`, im Editor hochladbar. Ohne Hintergrund-Override zeigt der Generator dieses Foto; eine globale Bildwahl ersetzt die Standardfotos des Templates. Fehlendes `asset` bleibt abwärtskompatibel.
 
 Der Generator speichert Photo-Overrides pro aktuellem Entwurf: gewählte Datei, positionX/Y, zoom.
 
@@ -118,6 +119,8 @@ Statisches Template-Asset, z. B. Logo.
 - objectFit: contain/cover
 
 Keine externen URLs.
+
+Bild- und Foto-Assets können im Editor als JPG/PNG/WebP hochgeladen werden (20 MB). Der Upload wird unter einem neuen eindeutigen Dateinamen abgelegt und anschließend über `asset` referenziert. Das Speichern des Templates bleibt ein eigener Schritt. Assetdateien bleiben auch nach Template-Änderung oder -Löschung erhalten, damit archivierte Zustände weiter funktionieren.
 
 ## Koordinaten
 

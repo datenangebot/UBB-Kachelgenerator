@@ -54,7 +54,7 @@ function unique_path(string $dir, string $base, string $ext): string {
     for ($i=1;$i<10000;$i++) {
         $name = $base.($i===1?'':'-'.$i).'.'.$ext;
         $path=$dir.'/'.$name;
-        if (is_file($path.'.json')) continue;
+        if (is_file($path.'.json') || is_file($path.'.preview.png')) continue;
         $handle=@fopen($path,'x');
         if ($handle) { fclose($handle); return $path; }
     }
@@ -120,7 +120,65 @@ function validate_template(array $t): void {
             $asset=$e['asset']??'';
             if (!valid_template_asset($asset)) fail('INVALID_ASSET','Bild-Asset fehlt oder liegt außerhalb von assets/template-assets/.');
         }
+        if ($e['type']==='photo' && !empty($e['asset']) && !valid_template_asset($e['asset'])) fail('INVALID_ASSET','Standardfoto fehlt oder liegt außerhalb von assets/template-assets/.');
+        if ($e['type']==='photo' && isset($e['crop'])) {
+            if (!is_array($e['crop'])) fail('INVALID_CROP','Ungültiger Bildausschnitt.');
+            foreach (['positionX','positionY','zoom'] as $k) if (!number($e['crop'][$k]??null,$k==='zoom'?1:0,$k==='zoom'?3:100)) fail('INVALID_CROP','Ungültiger Bildausschnitt.');
+        }
     }
+}
+
+// All export types use the very same local font files in the browser and PDF.
+function font_catalog(): array {
+    $path=ROOT.'/assets/fonts/fonts.json';
+    $fonts=is_file($path)?json_decode(file_get_contents($path),true):null;
+    if (!is_array($fonts) || !$fonts) throw new RuntimeException('Schriftkatalog fehlt');
+    foreach ($fonts as $font) {
+        if (!is_string($font['family']??null) || !is_array($font['faces']??null) || !$font['faces']) throw new RuntimeException('Schriftkatalog ungültig');
+        foreach ($font['faces'] as $face) {
+            $file=$face['file']??'';
+            $resolved=is_string($file)?realpath(ROOT.'/assets/fonts/'.$file):false;
+            if (!$resolved || !str_starts_with($resolved,realpath(ROOT.'/assets/fonts').DIRECTORY_SEPARATOR) || !is_file($resolved) || !preg_match('/\.(ttf|otf)$/i',$file) || !number($face['weight']??null,100,900)) throw new RuntimeException('Schriftdatei fehlt oder ist ungültig');
+        }
+    }
+    return $fonts;
+}
+
+function valid_background(mixed $filename): bool {
+    if ($filename===null) return true;
+    return is_string($filename) && $filename!=='' && basename($filename)===$filename &&
+        !str_contains($filename,'\\') && !preg_match('/[\x00-\x1f\x7f]/',$filename) &&
+        preg_match('/\.(png|jpe?g|webp)$/i',$filename) && is_file(storage('backgrounds').'/'.$filename);
+}
+
+function restorable_state(mixed $s): bool {
+    if (!is_array($s) || ($s['version']??null)!==EXPORT_STATE_VERSION || !is_array($s['template']??null)) return false;
+    $t=$s['template'];
+    if (($t['schemaVersion']??null)!==1 || !is_string($t['id']??null) || !preg_match(ID_RX,$t['id']) || !is_string($t['name']??null) || !number($t['width']??null,100,6000) || !number($t['height']??null,100,6000) || !is_array($t['fields']??null) || !is_array($t['elements']??null)) return false;
+    if (!is_array($s['fields']??null) || !is_array($s['photo']??null) || !is_array($s['textOverrides']??null) || !array_key_exists('background',$s) || !valid_background($s['background'])) return false;
+    foreach ($t['fields'] as $f) {
+        if (!is_array($f) || !is_string($f['id']??null) || !is_string($s['fields'][$f['id']]??null) || strlen($s['fields'][$f['id']])>100000) return false;
+    }
+    foreach (['positionX','positionY','zoom'] as $key) if (!number($s['photo'][$key]??null,$key==='zoom'?1:0,$key==='zoom'?3:100)) return false;
+    $textIds=[];
+    foreach ($t['elements'] as $e) {
+        if (!is_array($e) || !is_string($e['id']??null) || !in_array($e['type']??null,['photo','image','text','shape'],true)) return false;
+        if ($e['type']==='text') $textIds[$e['id']]=true;
+        if ($e['type']==='image' && !valid_template_asset($e['asset']??null)) return false;
+        if ($e['type']==='photo' && !empty($e['asset']) && !valid_template_asset($e['asset'])) return false;
+    }
+    foreach ($s['textOverrides'] as $id=>$o) {
+        if (!isset($textIds[$id]) || !is_array($o) || !in_array($o['mode']??null,['auto','manual'],true) || !number($o['size']??null,0,1000) || !number($o['x']??null,-100,100) || !number($o['y']??null,-100,100)) return false;
+    }
+    return true;
+}
+
+function export_get(string $id): array {
+    foreach (glob(storage('exports').'/*/*/*.json')?:[] as $path) {
+        $item=json_decode(file_get_contents($path),true);
+        if (is_array($item) && ($item['id']??null)===$id) return $item;
+    }
+    fail('NOT_FOUND','Export nicht gefunden.',404);
 }
 function image_upload(array $file, int $limit, array $allowed): array {
     if (($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name']??'')) fail('UPLOAD','Upload fehlgeschlagen.');

@@ -5,6 +5,15 @@ set_exception_handler(function(Throwable $e): never { event_log('ERROR','excepti
 $action=$_GET['action']??'';
 if ($_SERVER['REQUEST_METHOD']==='POST') { require_post(); event_log('INFO','request.start',['operation'=>$action]); }
 switch ($action) {
+case 'fonts.list': respond(font_catalog());
+case 'assets.upload':
+    [$ext,$w,$h]=image_upload($_FILES['image']??[],MAX_IMAGE_BYTES,['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp']);
+    $dir=ROOT.'/assets/template-assets';
+    if (!is_dir($dir) && !mkdir($dir,0775,true)) throw new RuntimeException('Assetordner fehlt');
+    $path=unique_path($dir,safe_basename($_FILES['image']['name']).'-'.bin2hex(random_bytes(4)),$ext);
+    if (!move_uploaded_file($_FILES['image']['tmp_name'],$path)) { @unlink($path); throw new RuntimeException('Asset kann nicht gespeichert werden'); }
+    event_log('INFO','asset.upload',['filename'=>basename($path)]);
+    respond(['asset'=>'assets/template-assets/'.basename($path),'width'=>$w,'height'=>$h]);
 case 'backgrounds.list':
     $items=[];
     foreach (glob(storage('backgrounds').'/*')?:[] as $path) {
@@ -43,22 +52,52 @@ case 'templates.delete':
     event_log('INFO','template.delete',['template'=>$id]); respond(['id'=>$id]);
 case 'exports.save':
     event_log('INFO','export.start');
+    if (strlen($_POST['metadata']??'')>MAX_TEMPLATE_BYTES*2) fail('TOO_LARGE','Exportmetadaten zu groß.',413);
     $meta=json_decode($_POST['metadata']??'',true); if (!is_array($meta)) fail('INVALID_METADATA','Exportdaten fehlen.');
     $format=$meta['format']??'';
-    if (!in_array($format,['png','jpg'],true)) fail('INVALID_FORMAT','Exportformat ungültig.');
-    [$ext,$w,$h]=image_upload($_FILES['image']??[],MAX_EXPORT_BYTES,$format==='png'?['image/png'=>'png']:['image/jpeg'=>'jpg']);
-    $template=template_get(valid_id($meta['templateId']??null));
+    if (!in_array($format,['png','jpg','pdf'],true)) fail('INVALID_FORMAT','Exportformat ungültig.');
+    [$ext,$w,$h]=image_upload($_FILES['image']??[],MAX_EXPORT_BYTES,$format==='jpg'?['image/jpeg'=>'jpg']:['image/png'=>'png']);
+    $templateId=valid_id($meta['templateId']??null);
+    $generatorState=is_array($meta['generatorState']??null)?$meta['generatorState']:[];
+    if (array_key_exists('version',$generatorState)) {
+        if (!restorable_state($generatorState)) fail('INVALID_STATE','Generatorzustand ist unvollständig oder ungültig.');
+        $template=$generatorState['template']; validate_template($template);
+        if ($template['id']!==$templateId || strlen(json_encode($template,JSON_THROW_ON_ERROR))>MAX_TEMPLATE_BYTES) fail('INVALID_STATE','Template-Kopie passt nicht zum Export.');
+    } else $template=template_get($templateId);
     $scale=$meta['scale']??null;
     if (!in_array($scale,[1,2],true) || $w!=(int)$template['width']*$scale || $h!=(int)$template['height']*$scale) fail('INVALID_DIMENSIONS','Exportabmessungen passen nicht zum Template.');
+    if ($format==='pdf') {
+        $file=$_FILES['document']??[];
+        if (($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name']??'')) fail('UPLOAD','PDF-Upload fehlgeschlagen.');
+        if (($file['size']??0)<1 || $file['size']>MAX_EXPORT_BYTES) fail('UPLOAD_SIZE','PDF überschreitet das Größenlimit.',413);
+        $pdf=file_get_contents($file['tmp_name']);
+        if ((new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name'])!=='application/pdf' || !preg_match('/\A%PDF-1\.[4-7]/',$pdf) || !preg_match('/%%EOF\s*\z/',$pdf) || preg_match_all('~/Type\s*/Page\b~',$pdf)!==1 || !preg_match('~/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]~',$pdf,$box) || abs((float)$box[1]-$w*.75)>.01 || abs((float)$box[2]-$h*.75)>.01) fail('INVALID_PDF','PDF ist ungültig oder hat eine falsche Seitengröße.');
+        $ext='pdf';
+    }
     $dir=storage('exports').'/'.date('Y/m'); if (!is_dir($dir) && !mkdir($dir,0775,true)) throw new RuntimeException('Exportordner fehlt');
     $path=unique_path($dir,safe_basename((string)($meta['filename']??'UBB-Kachel'),'UBB-Kachel'),$ext);
-    if (!move_uploaded_file($_FILES['image']['tmp_name'],$path)) { @unlink($path); throw new RuntimeException('Exportdatei kann nicht gespeichert werden'); }
+    $previewPath=$format==='pdf'?$path.'.preview.png':null;
     $id=bin2hex(random_bytes(6)); $relative='storage/exports/'.date('Y/m').'/'.basename($path);
-    $sidecar=['id'=>$id,'createdAt'=>date(DATE_ATOM),'filename'=>basename($path),'url'=>$relative,'format'=>$format,'width'=>$w,'height'=>$h,'scale'=>$scale,'templateId'=>$template['id'],'templateName'=>$template['name'],'generatorState'=>is_array($meta['generatorState']??null)?$meta['generatorState']:[]];
-    try { atomic_json($path.'.json',$sidecar); } catch(Throwable $e) { @unlink($path); throw $e; }
+    $sidecar=['id'=>$id,'createdAt'=>date(DATE_ATOM),'filename'=>basename($path),'url'=>$relative,'previewUrl'=>$format==='pdf'?$relative.'.preview.png':$relative,'format'=>$format,'width'=>$w,'height'=>$h,'scale'=>$scale,'templateId'=>$template['id'],'templateName'=>$template['name'],'generatorState'=>$generatorState];
+    try {
+        if (!move_uploaded_file($_FILES[$format==='pdf'?'document':'image']['tmp_name'],$path)) throw new RuntimeException('Exportdatei kann nicht gespeichert werden');
+        if ($previewPath && !move_uploaded_file($_FILES['image']['tmp_name'],$previewPath)) throw new RuntimeException('Exportvorschau kann nicht gespeichert werden');
+        atomic_json($path.'.json',$sidecar);
+    } catch(Throwable $e) { @unlink($path); if ($previewPath) @unlink($previewPath); throw $e; }
     event_log('INFO','export.success',['filename'=>basename($path),'format'=>$format,'width'=>$w,'height'=>$h]); respond($sidecar);
+case 'exports.get':
+    $item=export_get(valid_id($_GET['id']??null));
+    if (!restorable_state($item['generatorState']??null)) fail('NOT_RESTORABLE','Dieser Export enthält keinen vollständig wiederherstellbaren Generatorzustand.',409);
+    validate_template($item['generatorState']['template']);
+    respond($item);
 case 'exports.list':
-    $items=[]; foreach (glob(storage('exports').'/*/*/*.json')?:[] as $path) { $x=json_decode(file_get_contents($path),true); if (is_array($x) && isset($x['url'])) $items[]=$x; }
+    $items=[]; foreach (glob(storage('exports').'/*/*/*.json')?:[] as $path) {
+        $x=json_decode(file_get_contents($path),true);
+        if (is_array($x) && isset($x['url'])) {
+            $x['canRestore']=restorable_state($x['generatorState']??null);
+            unset($x['generatorState']); $items[]=$x;
+        }
+    }
     usort($items,fn($a,$b)=>strcmp($b['createdAt'],$a['createdAt'])); respond($items);
 default: fail('NOT_FOUND','Endpunkt nicht gefunden.',404);
 }

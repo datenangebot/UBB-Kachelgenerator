@@ -43,9 +43,13 @@ Nicht implementieren:
 - Social-Media-Zielgrößen
 - mehrere Exportgrößen in einem Batch
 - n8n-Webhook nach Export
-- Export erneut als Entwurf öffnen
 - Template-Versionshistorie
 - zusätzliche Feldtypen (Datum, Auswahl etc.)
-- Logo-/Asset-Upload im Template-Editor
 
 Diese Punkte sollen die Architektur nicht unnötig komplizieren. Nur einfache Erweiterbarkeit berücksichtigen.
+
+## Ergänzungen nach v1
+
+- Logo-/Asset-Upload im Template-Editor, auch für ersetzbare Standardfotos.
+- Neue Exporte mit versioniertem Generatorzustand und vollständiger Template-Kopie erneut öffnen. Alte Exporte bleiben unverändert und ohne Ladefunktion.
+- Clientseitiger PDF-Export: Rasterebenen für Bildmaterial und Flächen, echte Texte mit lokal eingebetteten Schrift-Teilmengen. Derselbe lokale Schriftkatalog versorgt Vorschau, PNG/JPG und PDF; keine zusätzliche Server-Laufzeit oder Datenbank.

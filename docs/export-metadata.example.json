@@ -1,22 +1,33 @@
 {
-  "id": "20261004-095742-a1b2c3",
+  "id": "a1b2c3d4e5f6",
   "createdAt": "2026-10-04T09:57:42+02:00",
   "filename": "UBB_Neuwittenbek_2026.png",
+  "url": "storage/exports/2026/10/UBB_Neuwittenbek_2026.png",
+  "previewUrl": "storage/exports/2026/10/UBB_Neuwittenbek_2026.png",
   "format": "png",
   "width": 1138,
   "height": 1138,
   "scale": 1,
-  "templateId": "standard-magenta",
-  "templateName": "Standard Magenta",
+  "templateId": "beispiel",
+  "templateName": "Beispiel",
   "generatorState": {
-    "fields": {
-      "headline": "150 Jahre Neuwittenbek",
-      "date": "Sa 29.08.",
-      "time": "18:00h",
-      "mainText": "Uni-BigBand Kiel",
-      "sideText": "Summer · Swing · Pop"
+    "version": 1,
+    "template": {
+      "schemaVersion": 1,
+      "id": "beispiel",
+      "name": "Beispiel",
+      "width": 1138,
+      "height": 1138,
+      "fields": [{"id":"headline","label":"Überschrift","inputType":"textarea","defaultValue":"Konzert","order":10}],
+      "elements": [
+        {"id":"base","name":"Fläche","type":"shape","x":0,"y":0,"width":1138,"height":1138,"rotation":0,"opacity":1,"zIndex":1,"fillColor":"#9f147e","borderRadius":0},
+        {"id":"headline","name":"Überschrift","type":"text","x":100,"y":100,"width":938,"height":200,"rotation":0,"opacity":1,"zIndex":2,"binding":{"type":"field","fieldId":"headline"},"fontFamily":"Liberation Sans","fontWeight":700,"minFontSize":24,"maxFontSize":80,"maxLines":3,"lineHeight":1.1,"wrap":true,"color":"#ffffff","textAlign":"left","verticalAlign":"middle","letterSpacing":0}
+      ]
     },
-    "background": "beispiel.jpg",
+    "fields": {
+      "headline": "150 Jahre Neuwittenbek"
+    },
+    "background": null,
     "photo": {
       "positionX": 50,
       "positionY": 50,

@@ -1,0 +1,5 @@
+[
+  {"family":"Liberation Sans","aliases":["Arial","Helvetica","sans-serif"],"faces":[{"file":"LiberationSans-Regular.ttf","weight":400},{"file":"LiberationSans-Bold.ttf","weight":700}]},
+  {"family":"Liberation Serif","aliases":["Times New Roman","Times","serif"],"faces":[{"file":"LiberationSerif-Regular.ttf","weight":400},{"file":"LiberationSerif-Bold.ttf","weight":700}]},
+  {"family":"Liberation Mono","aliases":["Courier New","Courier","monospace"],"faces":[{"file":"LiberationMono-Regular.ttf","weight":400},{"file":"LiberationMono-Bold.ttf","weight":700}]}
+]
