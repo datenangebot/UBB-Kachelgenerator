@@ -16,7 +16,7 @@ Ein vollständiges Backup umfasst `storage/backgrounds`, `storage/templates`, `s
 
 Generator: Template wählen, dynamische Felder ausfüllen, Hintergrund wählen oder hochladen, Bildausschnitt einstellen, Texte bei Bedarf über ⚙ feinjustieren und exportieren. Der Export wird zuerst serverseitig gespeichert und danach heruntergeladen. Das Archiv zeigt alle Exporte, ohne Löschfunktion.
 
-Templates: Neues Template anlegen oder vorhandenes bearbeiten. Elemente können auf dem Canvas gezogen und am Griff skaliert werden. Die rechte Spalte erlaubt präzise Werte. Für ein Bild-Element muss vorher eine lokale Datei unter `assets/template-assets/` liegen; der Pfad wird dort eingetragen. Nur vorhandene Dateien in diesem Verzeichnis werden akzeptiert.
+Templates: Neues Template anlegen oder vorhandenes bearbeiten. Elemente können auf dem Canvas gezogen und am Griff skaliert werden. Die rechte Spalte erlaubt präzise Werte. Für ein Bild-Element muss vorher eine lokale Datei unter `assets/template-assets/` liegen; der Pfad wird dort eingetragen. UTF-8-Dateinamen wie `assets/template-assets/2026_UBB-KiWo-Fördebühne.png` sind erlaubt. Nur vorhandene Dateien innerhalb dieses Verzeichnisses werden akzeptiert.
 
 ## Dateien und Entscheidungen
 

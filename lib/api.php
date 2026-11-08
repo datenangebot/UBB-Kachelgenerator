@@ -82,6 +82,17 @@ function template_get(string $id): array {
     return $t;
 }
 function number(mixed $v, float $min, float $max): bool { return is_numeric($v) && is_finite((float)$v) && $v >= $min && $v <= $max; }
+function valid_template_asset(mixed $asset): bool {
+    if (!is_string($asset) || strlen($asset)>512 ||
+        !preg_match('~\Aassets/template-assets/.+\.(?:png|jpe?g|webp|svg)\z~iu', $asset) ||
+        str_contains($asset, '..') || str_contains($asset, '\\') ||
+        preg_match('/[\x00-\x1F\x7F]/', $asset)) return false;
+
+    $assetDir=realpath(ROOT.'/assets/template-assets');
+    $file=realpath(ROOT.'/'.$asset);
+    return $assetDir!==false && $file!==false && is_file($file) &&
+        str_starts_with($file, $assetDir.DIRECTORY_SEPARATOR);
+}
 function validate_template(array $t): void {
     if (($t['schemaVersion']??null)!==1) fail('SCHEMA','Nur Template-Version 1 wird unterstützt.');
     valid_id($t['id']??null);
@@ -107,7 +118,7 @@ function validate_template(array $t): void {
         }
         if ($e['type']==='image') {
             $asset=$e['asset']??'';
-            if (!is_string($asset) || !preg_match('#^assets/template-assets/[A-Za-z0-9/_-]+\.(png|jpg|jpeg|webp|svg)$#D',$asset) || str_contains($asset,'..') || !is_file(ROOT.'/'.$asset)) fail('INVALID_ASSET','Bild-Asset ist nicht freigegeben oder fehlt.');
+            if (!valid_template_asset($asset)) fail('INVALID_ASSET','Bild-Asset fehlt oder liegt außerhalb von assets/template-assets/.');
         }
     }
 }
