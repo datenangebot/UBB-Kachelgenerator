@@ -48,7 +48,7 @@ Mehr Typen erst später, falls wirklich notwendig.
 
 ## Element: photo
 
-Bindet das global im Generator gewählte Hintergrundfoto ein.
+Bindet das für dieses Foto-Element im Generator gewählte Bild ein. Mehrere Foto-Elemente lassen sich unabhängig belegen und zuschneiden.
 
 Eigenschaften:
 
@@ -59,9 +59,9 @@ Eigenschaften:
 - zIndex
 - crop defaults: `positionX`, `positionY`, `zoom`
 - `objectFit` in v1 fest `cover`
-- optional `asset`: Standardfoto unter `assets/template-assets/`, im Editor hochladbar. Ohne Hintergrund-Override zeigt der Generator dieses Foto; eine globale Bildwahl ersetzt die Standardfotos des Templates. Fehlendes `asset` bleibt abwärtskompatibel.
+- optional `asset`: Standardfoto unter `assets/template-assets/`, im Editor hochladbar. Ohne individuellen Override zeigt der Generator dieses Foto mit dem eigenen `crop`. Bildwahl und Upload ersetzen ausschließlich das gewählte Foto-Element. Fehlendes `asset` bleibt abwärtskompatibel.
 
-Der Generator speichert Photo-Overrides pro aktuellem Entwurf: gewählte Datei, positionX/Y, zoom.
+Der Generator speichert Overrides nach Element-ID: `photos[id]` enthält `background` (Dateiname aus `storage/backgrounds/` oder null für das Template-Standardfoto), `positionX`, `positionY` und `zoom`. Alle Foto-Elemente werden gespeichert, auch solche ohne gewählte Datei. Exportzustände der Version 1 behalten ihre bisherige gemeinsame Bildwahl/Ausschnitt-Darstellung beim Laden; erst neue Exporte verwenden den Zustand der Version 2. Das Template-Schema bleibt bei Version 1.
 
 ## Element: text
 
@@ -97,6 +97,8 @@ Eigenschaften:
 - letterSpacing
 
 Optional für spätere Erweiterungen reservieren, aber nicht in v1 bauen: textShadow, stroke, rich text.
+
+Optional seit Erweiterung des Editors: `naming: {"id":"auto","name":"auto"}`. Beide Werte dürfen unabhängig `auto` oder `manual` sein. Bei Auswahl einer Feldverknüpfung übernimmt der Editor für automatische Werte die Feld-ID bzw. Feldbezeichnung; Element-IDs bleiben durch einen nummerierten Zusatz eindeutig. Eine manuelle Bearbeitung setzt den jeweiligen Wert auf `manual`. Rückgängig stellt die Kennzeichnung mit wieder her. Die Angabe wird mit dem Template und Export-Snapshot gespeichert; Template-Schema 1 bleibt bestehen. Ältere Templates ohne Angabe bleiben lesbar und werden konservativ behandelt: Nur generische Text-ID-/Namensvorgaben gelten als automatisch. Das reine Öffnen verändert keine bestehenden Dateien.
 
 ## Element: shape
 

@@ -112,6 +112,7 @@ function validate_template(array $t): void {
         $elementIds[$id]=true;
         foreach (['x','y','width','height','rotation','opacity','zIndex'] as $k) if (!number($e[$k]??null,$k==='opacity'?0:($k==='width'||$k==='height'?1:-10000),$k==='opacity'?1:10000)) fail('INVALID_ELEMENT','Ungültige Elementgeometrie.');
         if ($e['type']==='text') {
+            if (isset($e['naming']) && (!is_array($e['naming']) || !in_array($e['naming']['id']??null,['auto','manual'],true) || !in_array($e['naming']['name']??null,['auto','manual'],true))) fail('INVALID_TEXT','Ungültige Einstellungen zur automatischen Benennung.');
             $b=$e['binding']??[];
             if (!in_array($b['type']??null,['field','static'],true) || ($b['type']==='field' && !isset($ids[$b['fieldId']??''])) || ($b['type']==='static' && !is_string($b['text']??null))) fail('INVALID_BINDING','Textbindung ungültig.');
             if (!number($e['minFontSize']??null,1,1000) || !number($e['maxFontSize']??null,(float)($e['minFontSize']??1),1000) || !number($e['maxLines']??null,1,100)) fail('INVALID_TEXT','Schriftgröße oder Zeilenanzahl ungültig.');
@@ -151,21 +152,34 @@ function valid_background(mixed $filename): bool {
         preg_match('/\.(png|jpe?g|webp)$/i',$filename) && is_file(storage('backgrounds').'/'.$filename);
 }
 
+function valid_photo_crop(mixed $crop): bool {
+    if (!is_array($crop)) return false;
+    foreach (['positionX','positionY','zoom'] as $key) if (!number($crop[$key]??null,$key==='zoom'?1:0,$key==='zoom'?3:100)) return false;
+    return true;
+}
 function restorable_state(mixed $s): bool {
-    if (!is_array($s) || ($s['version']??null)!==EXPORT_STATE_VERSION || !is_array($s['template']??null)) return false;
+    if (!is_array($s) || !in_array($s['version']??null,[1,EXPORT_STATE_VERSION],true) || !is_array($s['template']??null)) return false;
     $t=$s['template'];
     if (($t['schemaVersion']??null)!==1 || !is_string($t['id']??null) || !preg_match(ID_RX,$t['id']) || !is_string($t['name']??null) || !number($t['width']??null,100,6000) || !number($t['height']??null,100,6000) || !is_array($t['fields']??null) || !is_array($t['elements']??null)) return false;
-    if (!is_array($s['fields']??null) || !is_array($s['photo']??null) || !is_array($s['textOverrides']??null) || !array_key_exists('background',$s) || !valid_background($s['background'])) return false;
+    if (!is_array($s['fields']??null) || !is_array($s['textOverrides']??null)) return false;
+    if ($s['version']===1 && (!valid_photo_crop($s['photo']??null) || !array_key_exists('background',$s) || !valid_background($s['background']))) return false;
     foreach ($t['fields'] as $f) {
         if (!is_array($f) || !is_string($f['id']??null) || !is_string($s['fields'][$f['id']]??null) || strlen($s['fields'][$f['id']])>100000) return false;
     }
-    foreach (['positionX','positionY','zoom'] as $key) if (!number($s['photo'][$key]??null,$key==='zoom'?1:0,$key==='zoom'?3:100)) return false;
-    $textIds=[];
+    $textIds=[]; $photoIds=[];
     foreach ($t['elements'] as $e) {
         if (!is_array($e) || !is_string($e['id']??null) || !in_array($e['type']??null,['photo','image','text','shape'],true)) return false;
         if ($e['type']==='text') $textIds[$e['id']]=true;
+        if ($e['type']==='photo') $photoIds[$e['id']]=true;
         if ($e['type']==='image' && !valid_template_asset($e['asset']??null)) return false;
         if ($e['type']==='photo' && !empty($e['asset']) && !valid_template_asset($e['asset'])) return false;
+    }
+    if ($s['version']===EXPORT_STATE_VERSION) {
+        if (!is_array($s['photos']??null) || count($s['photos'])!==count($photoIds)) return false;
+        foreach ($photoIds as $id=>$_) {
+            $photo=$s['photos'][$id]??null;
+            if (!valid_photo_crop($photo) || !array_key_exists('background',$photo) || !valid_background($photo['background'])) return false;
+        }
     }
     foreach ($s['textOverrides'] as $id=>$o) {
         if (!isset($textIds[$id]) || !is_array($o) || !in_array($o['mode']??null,['auto','manual'],true) || !number($o['size']??null,0,1000) || !number($o['x']??null,-100,100) || !number($o['y']??null,-100,100)) return false;

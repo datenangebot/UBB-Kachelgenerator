@@ -24,7 +24,8 @@ with sync_playwright() as playwright:
     text.fill('150 Jahre Neuwittenbek')
     page.locator('#warnings').wait_for(state='hidden')
 
-    page.locator('#upload-open').click()
+    page.locator('[data-photo-choice=photo]').click()
+    page.locator('#gallery-upload').click()
     page.locator('#upload-file').set_input_files('reference/UBB-150-J-Neuwittenbek_v1.png')
     page.locator('#upload-submit').click()
     page.locator('#upload-modal').wait_for(state='hidden')

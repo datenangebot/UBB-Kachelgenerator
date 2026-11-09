@@ -6,12 +6,31 @@ $action=$_GET['action']??'';
 if ($_SERVER['REQUEST_METHOD']==='POST') { require_post(); event_log('INFO','request.start',['operation'=>$action]); }
 switch ($action) {
 case 'fonts.list': respond(font_catalog());
+case 'assets.list':
+    $items=[]; $dir=ROOT.'/assets/template-assets';
+    if (is_dir($dir)) foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir,FilesystemIterator::SKIP_DOTS)) as $file) {
+        if (!$file->isFile()) continue;
+        $path=$file->getPathname(); $asset='assets/template-assets/'.substr($path,strlen($dir)+1);
+        if (!valid_template_asset($asset)) continue;
+        $size=@getimagesize($path);
+        if (!$size && strtolower(pathinfo($path,PATHINFO_EXTENSION))!=='svg') continue;
+        $meta=is_file($path.'.json')?json_decode(file_get_contents($path.'.json'),true):null;
+        $addedAt=is_string($meta['addedAt']??null)&&strtotime($meta['addedAt'])!==false?$meta['addedAt']:date(DATE_ATOM,filemtime($path));
+        $items[]=['asset'=>$asset,'url'=>implode('/',array_map('rawurlencode',explode('/',$asset))),'filename'=>basename($path),'name'=>is_string($meta['name']??null)?$meta['name']:basename($path),'addedAt'=>$addedAt,'width'=>$size?$size[0]:null,'height'=>$size?$size[1]:null];
+    }
+    usort($items,fn($a,$b)=>strcmp($b['addedAt'],$a['addedAt'])?:strcmp($a['asset'],$b['asset'])); respond($items);
 case 'assets.upload':
     [$ext,$w,$h]=image_upload($_FILES['image']??[],MAX_IMAGE_BYTES,['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp']);
     $dir=ROOT.'/assets/template-assets';
     if (!is_dir($dir) && !mkdir($dir,0775,true)) throw new RuntimeException('Assetordner fehlt');
     $path=unique_path($dir,safe_basename($_FILES['image']['name']).'-'.bin2hex(random_bytes(4)),$ext);
-    if (!move_uploaded_file($_FILES['image']['tmp_name'],$path)) { @unlink($path); throw new RuntimeException('Asset kann nicht gespeichert werden'); }
+    $name=basename(str_replace('\\','/',$_FILES['image']['name']));
+    if (!preg_match('//u',$name) || strlen($name)>512) $name=basename($path);
+    $name=preg_replace('/[\x00-\x1F\x7F]/u',' ',$name);
+    try {
+        if (!move_uploaded_file($_FILES['image']['tmp_name'],$path)) throw new RuntimeException('Asset kann nicht gespeichert werden');
+        atomic_json($path.'.json',['name'=>$name,'addedAt'=>(new DateTimeImmutable())->format('Y-m-d\TH:i:s.vP')]);
+    } catch(Throwable $e) { @unlink($path); throw $e; }
     event_log('INFO','asset.upload',['filename'=>basename($path)]);
     respond(['asset'=>'assets/template-assets/'.basename($path),'width'=>$w,'height'=>$h]);
 case 'backgrounds.list':

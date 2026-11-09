@@ -69,14 +69,28 @@ try:
             return {'name': name, 'mimeType': mime, 'buffer': content}
 
         def export(kind, scale=1):
+            # Visibility starts before Bootstrap's transition finishes. Wait for
+            # lifecycle events so a rapid next click cannot be ignored.
+            def watch(selector, event):
+                page.evaluate("""({selector,event}) => {
+                    window.ubbModalTransition = new Promise(resolve => document.querySelector(selector).addEventListener(event, () => resolve(true), {once:true}));
+                }""", {'selector':selector, 'event':event})
+
+            def wait_transition():
+                page.evaluate("""() => Promise.race([window.ubbModalTransition, new Promise((_,reject) => setTimeout(() => reject(Error('Modal transition timed out')), 5000))])""")
+
+            watch('#export-modal','shown.bs.modal')
             page.locator('#export-open').click()
+            wait_transition()
             page.locator('#export-name').fill(KEY)
             page.locator('#export-format').select_option(kind)
             page.locator('#export-scale').select_option(str(scale))
+            watch('#result-modal','shown.bs.modal')
             page.locator('#export-submit').click()
             page.wait_for_function("""() => document.querySelector('#result-modal').classList.contains('show') || !document.querySelector('#export-error').classList.contains('d-none')""", timeout=120000)
             assert not page.locator('#export-error').is_visible(), page.locator('#export-error').inner_text()
             page.locator('#result-modal').wait_for(state='visible')
+            wait_transition()
             name = page.locator('#result-name').inner_text()
             item = next(x for x in api('exports.list') if x['filename'] == name)
             created.add(ROOT / item['url'])
@@ -84,7 +98,9 @@ try:
             if item.get('previewUrl') != item['url']:
                 created.add(ROOT / item['previewUrl'])
             assert item['canRestore'] is True
+            watch('#result-modal','hidden.bs.modal')
             page.locator('#result-modal .btn-close').click()
+            wait_transition()
             page.locator('#result-modal').wait_for(state='hidden')
             return item
 
@@ -123,12 +139,14 @@ try:
         page.locator('#editor-view').wait_for(state='visible')
         for layer in ['Konzertfoto', 'Logo · image']:
             page.locator('.editor-layer').filter(has_text=layer).click()
+            page.get_by_role('button', name='Bild auswählen', exact=True).click()
             with page.expect_response('**/api/index.php?action=assets.upload') as response:
-                page.locator('#editor-properties input[type=file]').set_input_files(file(KEY+'.png', asset_bytes))
+                page.locator('#asset-picker-upload').set_input_files(file(KEY+'.png', asset_bytes))
             assert response.value.status == 200
             uploaded = response.value.json()['data']['asset']
             created.add(ROOT / uploaded)
             page.wait_for_function("asset => !!document.querySelector('#editor-canvas img[src$=\"' + asset + '\"]')", arg=uploaded)
+            expect(page.locator('#asset-picker-modal')).to_be_hidden()
         with page.expect_response('**/api/index.php?action=templates.save'):
             page.locator('#editor-save').click()
         template = api('templates.get&id=' + KEY)
@@ -139,10 +157,10 @@ try:
         assert page.locator('.tile-photo img').get_attribute('src').endswith(photo['asset'])
         # The default photo supports the same direct dragging as a gallery photo.
         position_before = page.locator('#photo-x').input_value()
-        box = page.locator('#preview-wrap').bounding_box()
-        page.mouse.move(box['x'] + 100, box['y'] + 100)
+        box = page.locator('#canvas .tile-photo').bounding_box()
+        page.mouse.move(box['x'] + box['width']*.9, box['y'] + box['height']*.9)
         page.mouse.down()
-        page.mouse.move(box['x'] + 130, box['y'] + 115, steps=4)
+        page.mouse.move(box['x'] + box['width']*.9 + 30, box['y'] + box['height']*.9 + 15, steps=4)
         page.mouse.up()
         assert page.locator('#photo-x').input_value() != position_before
         page.locator('[data-field-id=headline]').fill('Neue Variante mit ÄÖÜ und ß')
@@ -163,7 +181,8 @@ try:
         metadata = api('exports.get&id=' + first['id'])
         saved_state = metadata['generatorState']
         assert saved_state['fields']['headline'] == 'Neue Variante mit ÄÖÜ und ß'
-        assert saved_state['photo'] == {'zoom': 1.73, 'positionX': 27, 'positionY': 68}
+        assert saved_state['version'] == 2
+        assert saved_state['photos']['photo'] == {'background': None, 'zoom': 1.73, 'positionX': 27, 'positionY': 68}
         assert saved_state['textOverrides']['headline']['x'] == 17
         pdf = export('pdf')
         assert api('exports.get&id=' + pdf['id'])['generatorState'] == saved_state
@@ -201,10 +220,13 @@ try:
         created.add(ROOT / bg['url'])
         page.reload()
         page.locator('#fields textarea').first.wait_for()
-        page.locator('#background-mini button').first.click()
+        page.locator('[data-photo-choice=photo]').click()
+        page.locator('#gallery-search').fill(bg['filename'])
+        page.locator('#gallery-grid .gallery-item').click()
+        expect(page.locator('#gallery-modal')).to_be_hidden()
         with_background = export('jpg', 2)
         with_background_state = api('exports.get&id='+with_background['id'])['generatorState']
-        assert with_background_state['background'] == bg['filename']
+        assert with_background_state['photos']['photo']['background'] == bg['filename']
 
         # Deleting the source template must not affect snapshots or future exports.
         api('templates.delete', {'id': KEY})
@@ -256,7 +278,7 @@ try:
 
         # Reject a tampered state and PDF without creating any archive artifacts.
         invalid = copy.deepcopy(saved_state)
-        invalid['background'] = '../secret.png'
+        invalid['photos']['photo']['background'] = '../secret.png'
         api('exports.save', {'metadata': json.dumps(dict(format='png', scale=1, templateId=KEY, generatorState=invalid))},
             {'image': file('export.png', (ROOT / first['url']).read_bytes())}, expected=400)
         api('exports.save', {'metadata': json.dumps(dict(format='pdf', scale=1, templateId=KEY, generatorState=saved_state))},
@@ -267,6 +289,8 @@ try:
 finally:
     for path in created:
         path.unlink(missing_ok=True)
+        if (ROOT / 'assets/template-assets') in path.parents:
+            Path(str(path)+'.json').unlink(missing_ok=True)
     for path, digest in original.items():
         assert path.exists() and hashlib.sha256(path.read_bytes()).hexdigest() == digest, ('Existing archive changed', path)
 

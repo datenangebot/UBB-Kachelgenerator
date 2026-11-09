@@ -31,7 +31,7 @@ Nicht implementieren:
 - Ebenengruppen
 - Animationen
 - Kollaboration/Mehrbenutzer-Locking
-- Undo-Historie über viele Schritte (ein einfacher Reset ist ausreichend)
+- Undo-Historie über viele Schritte (nur der letzte Bearbeitungsschritt ist rückgängig machbar)
 - Export löschen
 - Template-Versionshistorie
 - Cloudspeicher
@@ -49,6 +49,8 @@ Nicht implementieren:
 Diese Punkte sollen die Architektur nicht unnötig komplizieren. Nur einfache Erweiterbarkeit berücksichtigen.
 
 ## Ergänzungen nach v1
+
+- Einstufiges Rückgängig im Template-Editor; Eingaben und Ziehbewegungen werden jeweils zusammengefasst. Speicherstatus und Warnung vor dem Verwerfen ungespeicherter Änderungen bei Navigation, Neuladen und Schließen.
 
 - Logo-/Asset-Upload im Template-Editor, auch für ersetzbare Standardfotos.
 - Neue Exporte mit versioniertem Generatorzustand und vollständiger Template-Kopie erneut öffnen. Alte Exporte bleiben unverändert und ohne Ladefunktion.
